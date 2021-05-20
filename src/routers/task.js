@@ -23,25 +23,33 @@ router.post("/tasks", auth, async (req,res) =>
 
 
 
-router.get("/tasks", async (req, res) =>await
- Task.find({})
+router.get("/tasks", auth, async (req, res) =>
+
+{
+   const tasks =  await Task.find({owner: req.user._id})
     .then( result =>result != []? res.send(result) : res.status(404).send("no tasks were found TT-TT"))
     .catch(e => res.status(503).send(e))
- )
+} )
 
 
 
 
 
 
- router.get("/tasks/:id", async (req, res) => await Task.findById(req.params.id)
-        .then(result => result ? res.send(result): res.status(404).send("task not found TT-TT") )
-        .catch(e => res.send(e))
-        )
+ router.get("/tasks/:id",auth, async (req, res) =>{
+    const _id = req.params.id
+     try{
+       const task =  await Task.findOne({ _id , owner: req.user._id})    
+       
+        if(!task) return res.status(404).send()
 
-
-
-
+       return res.send(task)
+    }catch(e) {
+        res.status(500).send({error: e})
+    }
+    
+})
+        
 
 router.put("/tasks/:id", async (req, res) => {
     let oldTask = await Task.findById(req.params.id).then(task => task)
@@ -65,7 +73,7 @@ router.put("/tasks/:id", async (req, res) => {
 
 
 //* better way of doing updates
-router.patch('/tasks/:id', async (req, res) => {
+router.patch('/tasks/:id', auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['description', 'completed']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
@@ -75,14 +83,16 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 
     try {
-        const task = await Task.findById(req.params.id)
 
-        updates.forEach((update) => task[update] = req.body[update])
-        await task.save()
+        const task = await Task.findOne({_id: req.params.id, owner: req.user._id})
 
+        
         if (!task) {
             return res.status(404).send()
         }
+        
+        updates.forEach((update) => task[update] = req.body[update])
+        await task.save()
 
         res.send(task)
     } catch (e) {
@@ -90,7 +100,19 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 })
 
-router.delete("/tasks/:id", async (req, res) => await Task.findByIdAndDelete(req.params.id).then(re => res.send(`deleted the following task ${re.description}`).catch(e => res.send(e))))
+router.delete("/tasks/:id", auth,  async (req, res) => {
+    try{
+
+        const task = await Task.findOneAndDelete( {_id:req.params.id , owner:req.user._id})
+
+        if(!task) return  res.status(404).send()
+
+        res.send(task)
+    }
+    catch(e) {
+        res.send(500).send()
+    }
+})
 
 
 
