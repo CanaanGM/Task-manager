@@ -19,16 +19,39 @@ router.post("/tasks", auth, async (req,res) =>
         }
     })
 
-
-
-
-
+//! skip -> skips the number of results provided, 
+//! limit obviously limits the query size, 
+//! completed shows completed depends on the boolean provided,
+//! sortBy -> createdAt asc/desc ==>  /tasks?sortBy=createdAt:asc
 router.get("/tasks", auth, async (req, res) =>
 
 {
-   const tasks =  await Task.find({owner: req.user._id})
-    .then( result =>result != []? res.send(result) : res.status(404).send("no tasks were found TT-TT"))
-    .catch(e => res.status(503).send(e))
+   const match ={};
+   const sort = {}
+
+    if(req.query.completed){
+        match.completed = req.query.completed === 'true';
+    }   
+    if(req.query.sortBy){
+        const parts = req.query.sortBy.split("-")
+        sort[parts[0]] = parts[1] === 'desc' ? -1 : 1 
+    }
+
+    try {
+        await req.user.populate({
+            path: 'tasks',
+            match,
+            options:{
+                limit:parseInt(req.query.limit ),
+                skip:parseInt(req.query.skip ),
+                sort
+            }
+        }).execPopulate()
+        
+        res.send(req.user.tasks)
+    } catch (e) {
+         res.status(500).send("screw u ")
+    }
 } )
 
 
@@ -51,22 +74,22 @@ router.get("/tasks", auth, async (req, res) =>
 })
         
 
-router.put("/tasks/:id", async (req, res) => {
-    let oldTask = await Task.findById(req.params.id).then(task => task)
+// router.put("/tasks/:id", async (req, res) => {
+//     let oldTask = await Task.findById(req.params.id).then(task => task)
 
-    if(oldTask == null || oldTask == {})
-       return  res.status(400).send("task not found")
+//     if(oldTask == null || oldTask == {})
+//        return  res.status(400).send("task not found")
     
-   return await Task.findByIdAndUpdate(
-        req.params.id,
-        {
-            description: req.body.description != null ? req.body.description : oldTask.description,
-            completed: req.body.completed != null ? req.body.completed : oldTask.completed
-        },
-        {new:true})
-        .then(result => res.send(result))
-        .catch(e => res.status(500).send(e))
-})
+//    return await Task.findByIdAndUpdate(
+//         req.params.id,
+//         {
+//             description: req.body.description != null ? req.body.description : oldTask.description,
+//             completed: req.body.completed != null ? req.body.completed : oldTask.completed
+//         },
+//         {new:true})
+//         .then(result => res.send(result))
+//         .catch(e => res.status(500).send(e))
+// })
 
 
 

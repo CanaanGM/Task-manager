@@ -43,6 +43,15 @@ const userSchema = new mongoose.Schema({
             required: true
         }
     }]
+}, {
+    // options 
+    timestamps: true
+})
+
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id',
+    foreignField: 'owner'
 })
 
 userSchema.pre('save',async function (next) {
