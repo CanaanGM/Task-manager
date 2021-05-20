@@ -85,7 +85,7 @@ userSchema.statics.finByCredentials = async (email, password) => {
 
 userSchema.methods.generateAuthToken = async function () {
     const user = this;
-    const token = jwt.sign({_id: user.id.toString(), email:user.email}, "tigerMafia!")
+    const token = jwt.sign({ _id: user._id.toString() }," process.env.JWT_SECRET") //! after adding the env it fails
     user.tokens = user.tokens.concat({token})
     await user.save()
 

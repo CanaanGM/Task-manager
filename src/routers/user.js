@@ -7,7 +7,7 @@ const auth = require("../middleware/auth")
 const multer = require("multer")
 const upload = multer({
     limits:{
-        fileSize: 10_000_000
+        fileSize: 10000000
     },
     fileFilter(req, file,cb){
         if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
@@ -81,7 +81,7 @@ router.post("/users", async (req, res)=> {
        
     }
     catch(e){
-        res.status(400).send()
+        res.status(400).send(e)
     }
             
 });
