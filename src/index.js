@@ -5,7 +5,7 @@ const app = express();
 const userRouter = require("../src/routers/user")
 const taskRouter = require("../src/routers/task")
 
-const port = process.env.PORT || 3500;
+const port = process.env.PORT;
 var morgan = require('morgan')
 
 
